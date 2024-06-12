@@ -1,0 +1,13 @@
+{
+    "version":2,
+    "name":"plant-paradise-hub",
+    "builds":[
+        {"src":"*.js", "use":"@vercel/node"}
+    ],
+    "routes":[
+        {
+            "src":"/(.*)",
+            "dest":"/"
+        }
+    ]
+}
