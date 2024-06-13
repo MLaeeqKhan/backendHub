@@ -166,7 +166,7 @@ router.get("/getCartData/:userId", async (req, res) => {
 
 // Delete cart Product by cart Product ID
 router.delete(
-  "/deleteCartProductsAfterPayment/:cartProductId",
+  "/deleteCartProducts/:cartProductId",
   async (req, res) => {
     const { cartProductId } = req.params;
     console.log("productId:", cartProductId);
@@ -183,7 +183,7 @@ router.delete(
 );
 
 // Delete cart Product by cartProduct's userId after successfull payment
-router.delete("/deleteCartProducts/:userId", async (req, res) => {
+router.delete("/deleteCartProductsAfterPayment/:userId", async (req, res) => {
   const { userId } = req.params;
   console.log("productId:", userId);
   try {
@@ -191,7 +191,7 @@ router.delete("/deleteCartProducts/:userId", async (req, res) => {
     res.sendStatus(204);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "deleteCartProducts Internal server error" });
+    res.status(500).json({ error: "deleteCartProductsAfterPayment Internal server error" });
   }
 });
 
