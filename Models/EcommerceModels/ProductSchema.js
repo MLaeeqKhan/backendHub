@@ -15,11 +15,11 @@ const ProductSchema = new mongoose.Schema({
         required: true
     },
     productPrice: {
-        type: Number, // Change to Number
+        type: Number, 
         required: true
     },
     stockQuantity: {
-        type: Number, // Change to Number
+        type: Number, 
         required: true
     },
     image: {

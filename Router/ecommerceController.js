@@ -4,7 +4,9 @@ const cloudinary = require("../Middleware/cloudinay");
 const Product = require("../Models/EcommerceModels/ProductSchema");
 const ProductReview = require("../Models/EcommerceModels/ProductReviewsSchema");
 const AddToCart = require("../Models/EcommerceModels/AddToCartSchema");
+const Order = require("../Models/EcommerceModels/OrderFormSchema");
 const multer = require("multer");
+const stripe = require("stripe")(process.env.STRIPE_SECRRT);
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -19,8 +21,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Route to post a new product
-router.post(
-  "/postProduct",
+router.post("/postProduct",
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "multipleImages", maxCount: 12 },
@@ -110,7 +111,7 @@ router.get("/getProducts", async (req, res) => {
       path: 'userId',
       select: 'userName'
     });
-    console.log("products",products)
+    console.log("products", products)
     res.json({ products });
   } catch (error) {
     console.log("error", error);
@@ -165,8 +166,7 @@ router.get("/getCartData/:userId", async (req, res) => {
 });
 
 // Delete cart Product by cart Product ID
-router.delete(
-  "/deleteCartProducts/:cartProductId",
+router.delete("/deleteCartProducts/:cartProductId",
   async (req, res) => {
     const { cartProductId } = req.params;
     console.log("productId:", cartProductId);
@@ -231,20 +231,35 @@ router.get("/getReviews/:productId", async (req, res) => {
   }
 });
 
+// Create a new order
+router.post("/createOrder", async (req, res) => {
+  console.log("req.body:", req.body);
+  try {
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+    res.status(201).json(newOrder);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+
 router.post("/create-checkout-session", async (req, res) => {
   try {
-    const { products } = req.body;
-    console.log("products:", products);
+    const { cart } = req.body.products; // Destructure cart from req.body.products
+    console.log("cart:", cart);
+
     let userId;
-    const lineItems = products.map((product) => {
-      const price = parseFloat(
-        product.productId.productPrice.replace(/[^0-9.-]+/g, "")
-      );
+    const lineItems = cart.map((cartItem,index) => {
+      const product = cartItem[index].productId; // Accessing productId from the first item in cartItem array
+
+      const price = product.productPrice; // Accessing productPrice from productId
       const unitAmount = Math.round(price * 100);
+
       userId = product.userId;
       if (isNaN(unitAmount)) {
         throw new Error(
-          `Invalid product price for product ID: ${product.productId._id}`
+          `Invalid product price for product ID: ${product._id}`
         );
       }
 
@@ -252,12 +267,12 @@ router.post("/create-checkout-session", async (req, res) => {
         price_data: {
           currency: "usd",
           product_data: {
-            name: product.productId.productName,
-            images: [product.productId.image.url],
+            name: product.productName,
+            images: [product.image.url],
           },
           unit_amount: unitAmount,
         },
-        quantity: product.quantity,
+        quantity: cartItem[index].quantity, // Assuming the second item in cartItem is an object with quantity
       };
     });
 
@@ -268,12 +283,14 @@ router.post("/create-checkout-session", async (req, res) => {
       success_url: "http://localhost:3000/paymentSuccess",
       cancel_url: "http://localhost:3000/paymentCancel",
     });
-    console.log("session=======", session);
+    console.log("session:", session);
     res.json({ id: session.id });
   } catch (error) {
     console.error("Stripe checkout session error:", error);
     res.status(500).send({ error: error.message });
   }
 });
+
+
 
 module.exports = router;
