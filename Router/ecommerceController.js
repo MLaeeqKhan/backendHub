@@ -246,21 +246,20 @@ router.post("/createOrder", async (req, res) => {
 
 router.post("/create-checkout-session", async (req, res) => {
   try {
-    const { cart } = req.body.products; // Destructure cart from req.body.products
-    console.log("cart:", cart);
+    const { products } = req.body; // Destructure cart from req.body.products
+    const cart = products;
+    console.log("create-checkout-session cart:", cart);
 
-    let userId='';
-    const lineItems = cart.map((cartItem,index) => {
-      const product = cartItem[index].productId; // Accessing productId from the first item in cartItem array
+    let userId = '';
+    const lineItems = cart.map(cartItem => {
+      const product = cartItem.productId; // Accessing productId from cartItem
 
       const price = product.productPrice; // Accessing productPrice from productId
       const unitAmount = Math.round(price * 100);
 
       userId = product.userId;
       if (isNaN(unitAmount)) {
-        throw new Error(
-          `Invalid product price for product ID: ${product._id}`
-        );
+        throw new Error(`Invalid product price for product ID: ${product._id}`);
       }
 
       return {
@@ -272,52 +271,8 @@ router.post("/create-checkout-session", async (req, res) => {
           },
           unit_amount: unitAmount,
         },
-        quantity: cartItem[index].quantity, // Assuming the second item in cartItem is an object with quantity
+        quantity: cartItem.quantity, // Accessing quantity directly from cartItem
       };
-    });
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: lineItems,
-      mode: "payment",
-      success_url: "http://localhost:3000/paymentSuccess",
-      cancel_url: "http://localhost:3000/paymentCancel",
-    });
-    console.log("session:", session);
-    res.json({ id: session.id });
-  } catch (error) {
-    console.error("Stripe checkout session error:", error);
-    res.status(500).send({ error: error.message });
-  }
-});router.post("/create-checkout-session", async (req, res) => {
-  try {
-    const { cart } = req.body.products; // Destructure cart from req.body.products
-    console.log("cart:", cart);
-
-    let userId = '';
-    const lineItems = cart.flatMap((cartItem) => {
-      return cartItem.map(item => {
-        const product = item.productId; // Accessing productId from the item in cartItem array
-        const price = product.productPrice; // Accessing productPrice from productId
-        const unitAmount = Math.round(price * 100);
-
-        userId = product.userId;
-        if (isNaN(unitAmount)) {
-          throw new Error(`Invalid product price for product ID: ${product._id}`);
-        }
-
-        return {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: product.productName,
-              images: [product.image.url],
-            },
-            unit_amount: unitAmount,
-          },
-          quantity: item.quantity, // Accessing quantity directly from item
-        };
-      });
     });
 
     const session = await stripe.checkout.sessions.create({
