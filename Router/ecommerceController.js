@@ -249,7 +249,7 @@ router.post("/create-checkout-session", async (req, res) => {
     const { cart } = req.body.products; // Destructure cart from req.body.products
     console.log("cart:", cart);
 
-    let userId;
+    let userId='';
     const lineItems = cart.map((cartItem,index) => {
       const product = cartItem[index].productId; // Accessing productId from the first item in cartItem array
 
@@ -289,7 +289,52 @@ router.post("/create-checkout-session", async (req, res) => {
     console.error("Stripe checkout session error:", error);
     res.status(500).send({ error: error.message });
   }
+});router.post("/create-checkout-session", async (req, res) => {
+  try {
+    const { cart } = req.body.products; // Destructure cart from req.body.products
+    console.log("cart:", cart);
+
+    let userId = '';
+    const lineItems = cart.flatMap((cartItem) => {
+      return cartItem.map(item => {
+        const product = item.productId; // Accessing productId from the item in cartItem array
+        const price = product.productPrice; // Accessing productPrice from productId
+        const unitAmount = Math.round(price * 100);
+
+        userId = product.userId;
+        if (isNaN(unitAmount)) {
+          throw new Error(`Invalid product price for product ID: ${product._id}`);
+        }
+
+        return {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: product.productName,
+              images: [product.image.url],
+            },
+            unit_amount: unitAmount,
+          },
+          quantity: item.quantity, // Accessing quantity directly from item
+        };
+      });
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      mode: "payment",
+      success_url: "http://localhost:3000/paymentSuccess",
+      cancel_url: "http://localhost:3000/paymentCancel",
+    });
+    console.log("session:", session);
+    res.json({ id: session.id });
+  } catch (error) {
+    console.error("Stripe checkout session error:", error);
+    res.status(500).send({ error: error.message });
+  }
 });
+
 
 
 
