@@ -5,6 +5,7 @@ const Product = require("../Models/EcommerceModels/ProductSchema");
 const ProductReview = require("../Models/EcommerceModels/ProductReviewsSchema");
 const AddToCart = require("../Models/EcommerceModels/AddToCartSchema");
 const Order = require("../Models/EcommerceModels/OrderFormSchema");
+const Services = require("../Models/EcommerceModels/ServicesSchema");
 const multer = require("multer");
 const stripe = require("stripe")(process.env.STRIPE_SECRRT);
 
@@ -250,7 +251,7 @@ router.post("/createOrder", async (req, res) => {
 
 router.post("/create-checkout-session", async (req, res) => {
   try {
-    const { products } = req.body; // Destructure cart from req.body.products
+    const { products } = req.body; 
     const cart = products;
     console.log("create-checkout-session cart:", cart);
 
@@ -313,5 +314,85 @@ console.log('update-solds products:', updateproducts)
   }
 });
 
+router.post("/create-service",
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "multipleImages", maxCount: 12 },
+  ]),
+  async (req, res) => {
+    const {userId, serviceName, servicePrice, startDate, endDate, description } = req.body;
+
+
+    const image = req.files["image"] ? req.files["image"][0] : null;
+    const multipleImages = req.files["multipleImages"] || [];
+
+    console.log('Service Name:', serviceName);
+    console.log('Service Price:', servicePrice);
+    console.log('Start Date:', startDate);
+    console.log('End Date:', endDate);
+    console.log('Description:', description);
+    console.log('Showcase Image:', image);
+    console.log('Images:', multipleImages);
+
+    try {
+      if (
+        !image ||
+        !serviceName ||
+        !description ||
+        !servicePrice       ) {
+        return res.status(422).send("Please Fill All Fields!");
+      }
+
+      const result = await cloudinary.uploader.upload(image.path, {
+        folder: "products",
+      });
+
+      const multipleImagesResults = await Promise.all(
+        multipleImages.map(async (file) => {
+          const res = await cloudinary.uploader.upload(file.path, {
+            folder: "services",
+          });
+          return {
+            public_id: res.public_id,
+            url: res.secure_url,
+          };
+        })
+      );
+
+      const service = await Services.create({
+        image: {
+          public_id: result.public_id,
+          url: result.secure_url,
+        },
+        multipleImages: multipleImagesResults,
+        userId,
+        serviceName,
+        description,
+        servicePrice,
+        startDate,
+        endDate,
+      });
+
+      res.status(200).send("create-service Posted Successfully");
+    } catch (error) {
+      console.error("error", error);
+      res.status(500).send("create-service Internal Server error!");
+    }
+  }
+);
+
+router.get("/getServices", async (req, res) => {
+  try {
+    const services = await Services.find().populate({
+      path: 'userId',
+      select: 'userName'
+    });
+    console.log("services", services)
+    res.json({ services });
+  } catch (error) {
+    console.log("error", error);
+    res.send(error);
+  }
+});
 
 module.exports = router;
