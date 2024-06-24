@@ -29,6 +29,7 @@ router.post("/postProduct",
   async (req, res) => {
     const {
       productName,
+      productCode,
       userId,
       productDescription,
       stockQuantity,
@@ -42,6 +43,7 @@ router.post("/postProduct",
     const multipleImages = req.files["multipleImages"] || [];
 
     console.log("Products Name:", productName);
+  console.log("Products productCode:", productCode);
     console.log("Products userId:", userId);
     console.log("Products productImg:", image);
     console.log("Products multipleImages:", multipleImages);
@@ -56,6 +58,7 @@ router.post("/postProduct",
       if (
         !image ||
         !productName ||
+        !productCode ||
         !productDescription ||
         !productPrice ||
         !stockQuantity ||
@@ -88,6 +91,7 @@ router.post("/postProduct",
         multipleImages: multipleImagesResults,
         userId,
         productName,
+        productCode,
         productDescription,
         productPrice,
         stockQuantity,
@@ -252,9 +256,9 @@ router.post("/create-checkout-session", async (req, res) => {
 
     let userId = '';
     const lineItems = cart.map(cartItem => {
-      const product = cartItem.productId; // Accessing productId from cartItem
-
-      const price = product.productPrice; // Accessing productPrice from productId
+      const product = cartItem.productId; 
+console.log('create-checkout-session product.productPrice:', product.productName)
+      const price = product.productPrice; 
       const unitAmount = Math.round(price * 100);
 
       userId = product.userId;
@@ -290,7 +294,24 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 });
 
+router.post('/update-solds', async (req, res) => {
+  try {
+    const { updateproducts } = req.body;
+console.log('update-solds products:', updateproducts)
+    for (const product of updateproducts) {
+      const { productId, quantity } = product;
+      const id=productId._id
+      await Product.findByIdAndUpdate(id, {
+        $inc: { solds: quantity }
+      });
+    }
 
+    res.status(200).json({ message: 'Solds updated successfully' });
+  } catch (error) {
+    console.error('Error updating solds:', error);
+    res.status(500).send({ error: error.message });
+  }
+});
 
 
 module.exports = router;

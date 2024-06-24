@@ -10,6 +10,10 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    productCode: {
+        type: String,
+        required: true
+    },
     productDescription: {
         type: String,
         required: true
@@ -21,6 +25,10 @@ const ProductSchema = new mongoose.Schema({
     stockQuantity: {
         type: Number, 
         required: true
+    },
+    solds: {
+        type: Number, 
+        default: 0
     },
     image: {
         public_id: {
