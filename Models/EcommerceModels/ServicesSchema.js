@@ -26,6 +26,10 @@ const ServiceSchema = new mongoose.Schema({
     type: String,
     required: false
   },
+  status: {
+    type: Boolean,
+    default: true
+  },
   image: {
     public_id: {
       type: String,

@@ -251,15 +251,15 @@ router.post("/createOrder", async (req, res) => {
 
 router.post("/create-checkout-session", async (req, res) => {
   try {
-    const { products } = req.body; 
+    const { products } = req.body;
     const cart = products;
     console.log("create-checkout-session cart:", cart);
 
     let userId = '';
     const lineItems = cart.map(cartItem => {
-      const product = cartItem.productId; 
-console.log('create-checkout-session product.productPrice:', product.productName)
-      const price = product.productPrice; 
+      const product = cartItem.productId;
+      console.log('create-checkout-session product.productPrice:', product.productName);
+      const price = product.productPrice;
       const unitAmount = Math.round(price * 100);
 
       userId = product.userId;
@@ -276,8 +276,20 @@ console.log('create-checkout-session product.productPrice:', product.productName
           },
           unit_amount: unitAmount,
         },
-        quantity: cartItem.quantity, // Accessing quantity directly from cartItem
+        quantity: cartItem.quantity,
       };
+    });
+
+    // Add the shipment charge
+    lineItems.push({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: "Shipping Charge",
+        },
+        unit_amount: 75, // $0.75 in cents
+      },
+      quantity: 1,
     });
 
     const session = await stripe.checkout.sessions.create({
@@ -294,6 +306,7 @@ console.log('create-checkout-session product.productPrice:', product.productName
     res.status(500).send({ error: error.message });
   }
 });
+
 
 router.post('/update-solds', async (req, res) => {
   try {
@@ -394,5 +407,39 @@ router.get("/getServices", async (req, res) => {
     res.send(error);
   }
 });
+
+router.put('/update-status/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const service = await Services.findById(id);
+    if (!service) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+
+    service.status = status;
+    await service.save();
+
+    res.status(200).json({ message: 'Service status updated', service });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.delete("/deleteServices/:id", async (req, res) => {
+    const { id } = req.params;
+    console.log("id:", id);
+    try {
+      await Services.deleteOne({ _id: id });
+      res.sendStatus(204);
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ error: "deleteServices Internal server error" });
+    }
+  }
+);
 
 module.exports = router;
