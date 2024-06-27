@@ -442,4 +442,68 @@ router.delete("/deleteServices/:id", async (req, res) => {
   }
 );
 
+
+router.post("/update-service/:id",
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "multipleImages", maxCount: 12 },
+  ]),
+  async (req, res) => {
+    const {serviceName, servicePrice, startDate, endDate, description } = req.body;
+    const { id } = req.params;
+
+    const image = req.files["image"] ? req.files["image"][0] : null;
+    const multipleImages = req.files["multipleImages"] || [];
+
+    try {
+      if (!serviceName || !description || !servicePrice) {
+        return res.status(422).send("Please Fill All Required Fields!");
+      }
+
+      let imageResult = {};
+      if (image) {
+        imageResult = await cloudinary.uploader.upload(image.path, {
+          folder: "services",
+        });
+      }
+
+      let multipleImagesResults = [];
+      if (multipleImages.length > 0) {
+        multipleImagesResults = await Promise.all(
+          multipleImages.map(async (file) => {
+            const result = await cloudinary.uploader.upload(file.path, {
+              folder: "services",
+            });
+            return {
+              public_id: result.public_id,
+              url: result.secure_url,
+            };
+          })
+        );
+      }
+
+      const updatedService = await Services.findByIdAndUpdate(id, {
+        serviceName,
+        servicePrice,
+        startDate,
+        endDate,
+        description,
+        image: imageResult ? { public_id: imageResult.public_id, url: imageResult.secure_url } : null,
+        multipleImages: multipleImagesResults,
+      }, { new: true });
+
+      if (!updatedService) {
+        return res.status(404).send("Service not found!");
+      }
+
+      res.status(200).json(updatedService);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      res.status(500).send("Internal Server Error!");
+    }
+  }
+);
+
+
+
 module.exports = router;
