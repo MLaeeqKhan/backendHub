@@ -9,7 +9,7 @@ const vendorProfileSchema = new Schema({
   userId:{
     type:mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
 },
   businessEmail: {
     type: String,
@@ -34,6 +34,10 @@ const vendorProfileSchema = new Schema({
   pickupAddress: {
     type: String,
     required: true,
+  },
+  status: {
+    type: Boolean,
+    default: true,
   },
   city: {
     type: String,

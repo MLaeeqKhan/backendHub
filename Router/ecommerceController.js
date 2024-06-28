@@ -6,6 +6,7 @@ const ProductReview = require("../Models/EcommerceModels/ProductReviewsSchema");
 const AddToCart = require("../Models/EcommerceModels/AddToCartSchema");
 const Order = require("../Models/EcommerceModels/OrderFormSchema");
 const Services = require("../Models/EcommerceModels/ServicesSchema");
+const VendorProfile = require("../Models/EcommerceModels/VenderProfileSchema");
 const multer = require("multer");
 const stripe = require("stripe")(process.env.STRIPE_SECRRT);
 
@@ -504,6 +505,92 @@ router.post("/update-service/:id",
   }
 );
 
+router.post('/vendor-profile', async (req, res) => {
+  const { name, userId, email, contact, businessType, description, address, pickupAddress, city, postalCode } = req.body;
+ // Log all fields
+ console.log('name:', name);
+ console.log('userId:', userId);
+ console.log('email:', email);
+ console.log('contact:', contact);
+ console.log('businessType:', businessType);
+ console.log('description:', description);
+ console.log('address:', address);
+ console.log('pickupAddress:', pickupAddress);
+ console.log('city:', city);
+ console.log('postalCode:', postalCode);
+  if (!name || !email || !contact || !businessType || !address || !pickupAddress || !city || !postalCode) {
+      return res.status(422).json({ error: 'Please fill in all required fields.' });
+  }
+
+  try {
+      const newVendorProfile = new VendorProfile({
+          businessName: name,
+          userId:userId,
+          businessEmail: email,
+          businessContact: contact,
+          businessType,
+          businessDescription: description,
+          businessAddress: address,
+          pickupAddress,
+          city,
+          postalCode,
+      });
+
+      const savedProfile = await newVendorProfile.save();
+      res.status(200).json(savedProfile);
+  } catch (error) {
+      console.error('Error saving vendor profile:', error);
+      res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+router.get("/getVenders", async (req, res) => {
+  try {
+    const venders = await VendorProfile.find().populate({
+      path: 'userId',
+      select: 'userName'
+    });
+    console.log("venders:", venders)
+    res.json({ venders });
+  } catch (error) {
+    console.log("error", error);
+    res.send(error);
+  }
+});
+
+router.put('/updateVender-status/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const vernder = await VendorProfile.findById(id);
+    if (!vernder) {
+      return res.status(404).json({ message: 'vernder not found' });
+    }
+
+    vernder.status = status;
+    await vernder.save();
+
+    res.status(200).json({ message: 'vernder status updated', vernder });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.delete("/deleteVender/:id", async (req, res) => {
+  const { id } = req.params;
+  console.log("id:", id);
+  try {
+    await VendorProfile.deleteOne({ _id: id });
+    res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "deleteVender Internal server error" });
+  }
+}
+);
 
 
 module.exports = router;
