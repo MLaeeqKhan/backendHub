@@ -240,15 +240,63 @@ router.get("/getReviews/:productId", async (req, res) => {
 // Create a new order
 router.post("/createOrder", async (req, res) => {
   console.log("req.body:", req.body);
+  
   try {
     const newOrder = new Order(req.body);
-    await newOrder.save();
-    res.status(201).json(newOrder);
+    const savedOrder = await newOrder.save();
+    console.log('Order saved:', savedOrder);
+    res.status(201).json(savedOrder);
   } catch (error) {
+    console.error('Error saving order:', error);
     res.status(400).json({ message: error.message });
   }
 });
 
+
+router.get("/getOrders", async (req, res) => {
+  try {
+    const orders = await Order.find().populate('productIdies');
+    console.log("orders:", orders);
+    res.json({ orders });
+  } catch (error) {
+    console.log("error", error);
+    res.send(error);
+  }
+});
+
+
+router.delete("/deleteOrder/:id", async (req, res) => {
+  const { id } = req.params;
+  console.log("id:", id);
+  try {
+    await Order.deleteOne({ _id: id });
+    res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "deleteOrder Internal server error" });
+  }
+}
+);
+router.put('/updateOrder-status/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: 'order not found' });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.status(200).json({ message: 'order status updated', order });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
 
 router.post("/create-checkout-session", async (req, res) => {
   try {
