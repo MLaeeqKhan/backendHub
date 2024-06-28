@@ -255,7 +255,7 @@ router.post("/createOrder", async (req, res) => {
 
 router.get("/getOrders", async (req, res) => {
   try {
-    const orders = await Order.find().populate('productIdies');
+    const orders = await Order.find().populate('productIdies.productId');
     console.log("orders:", orders);
     res.json({ orders });
   } catch (error) {
