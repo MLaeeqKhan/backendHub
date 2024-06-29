@@ -7,6 +7,7 @@ const AddToCart = require("../Models/EcommerceModels/AddToCartSchema");
 const Order = require("../Models/EcommerceModels/OrderFormSchema");
 const Services = require("../Models/EcommerceModels/ServicesSchema");
 const VendorProfile = require("../Models/EcommerceModels/VenderProfileSchema");
+const User = require("../Models/ChatModels/userModel");
 const multer = require("multer");
 const stripe = require("stripe")(process.env.STRIPE_SECRRT);
 
@@ -640,5 +641,14 @@ router.delete("/deleteVender/:id", async (req, res) => {
 }
 );
 
-
+router.get("/getUsers", async (req, res) => {
+  try {
+    const users = await User.find();
+    console.log("users:", users)
+    res.json({ users });
+  } catch (error) {
+    console.log("error", error);
+    res.send(error);
+  }
+});
 module.exports = router;

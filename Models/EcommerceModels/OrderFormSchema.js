@@ -11,7 +11,9 @@ const orderSchema = new mongoose.Schema({
     city: { type: String, required: true },
     postal: { type: String, required: true },
     status: { type: Boolean, default: true },
+    paymentStatus: { type: Boolean, default: true },
     payment_method: { type: String, required: true },
+    totalAmount: { type: Number, required: true },
     productIdies: [{
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'PRODUCT', required: true },
         quantity: { type: Number, required: true }
