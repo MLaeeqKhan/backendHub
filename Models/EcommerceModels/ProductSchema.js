@@ -10,17 +10,25 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    productCode: {
+        type: String,
+        required: true
+    },
     productDescription: {
         type: String,
         required: true
     },
     productPrice: {
-        type: Number, // Change to Number
+        type: Number, 
         required: true
     },
     stockQuantity: {
-        type: Number, // Change to Number
+        type: Number, 
         required: true
+    },
+    solds: {
+        type: Number, 
+        default: 0
     },
     image: {
         public_id: {
