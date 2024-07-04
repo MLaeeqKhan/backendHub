@@ -29,30 +29,33 @@ router.get("/getChats", async (req, res) => {
 });
 
 router.post("/sendMessage", async (req, res) => {
-  const { UserID, receiverId, content } = req.body;
+  const { userId, receiverId, content } = req.body;
+  console.log('sendMessage receiverId:', receiverId)
+    console.log('sendMessage userId:', userId)
+
   try {
     const chat = await createdChats.findOne({
       $or: [
-        { senderID: UserID, receiverID: receiverId },
-        { senderID: receiverId, receiverID: UserID },
+        { senderID: userId, receiverID: receiverId },
+        { senderID: receiverId, receiverID: userId },
       ],
     });
     if (chat) {
       let chatID = chat._id;
       const msg = new Chat({
         createdChatID: chatID,
-        senderID: UserID,
+        senderID: userId,
         content: content,
       });
       await msg.save();
       res.status(200).json({ msg });
     } else {
-      const newChat = new createdChats({ senderID:UserID, receiverID:receiverId });
+      const newChat = new createdChats({ senderID:userId, receiverID:receiverId });
       await newChat.save();
       let chatID = newChat._id;
       const msg = new Chat({
         createdChatID: chatID,
-        senderID: UserID,
+        senderID: userId,
         content: content,
       });
       await msg.save();
