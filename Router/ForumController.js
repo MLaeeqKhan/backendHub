@@ -288,12 +288,43 @@ router.post(
 
 router.get("/getQuestion", async (req, res) => {
   try {
-    const questions = await Threads.find();
+    const questions = await Threads.find().populate({
+      path: 'userId',
+      select: 'userName'
+    });;
     res.json({ questions });
   } catch (error) {
     console.log("error", error);
     res.send(error);
   }
 });
+router.get("/getQuestionsByUserId/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const questions = await Threads.find({ userId }).populate({
+      path: 'userId',
+      select: 'userName'
+    });
+        res.json({ questions });
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).send(error);
+  }
+});
+
+router.get("/getRepliesByQuestionId/:threadID", async (req, res) => {
+  const threadID = req.params.threadID;
+  try {
+    const reply = await Reply.find({ threadID }).populate({
+      path: 'userId',
+      select: 'userName'
+    });
+        res.json({ reply });
+  } catch (error) {
+    console.log("getRepliesByQuestionId error", error);
+    res.status(500).send(error);
+  }
+});
+
 
 module.exports = router;

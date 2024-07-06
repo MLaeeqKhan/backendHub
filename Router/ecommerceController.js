@@ -126,6 +126,21 @@ router.get("/getProducts", async (req, res) => {
   }
 });
 
+router.get("/getProductByuserId/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const products = await Product.find({userId}).populate({
+      path: 'userId',
+      select: 'userName'
+    });
+    console.log("products", products)
+    res.json({ products });
+  } catch (error) {
+    console.log("error", error);
+    res.send(error);
+  }
+});
+
 // Delete products by product ID
 router.delete("/deleteProducts/:productId", async (req, res) => {
   const { productId } = req.params;
@@ -458,6 +473,21 @@ router.get("/getServices", async (req, res) => {
   }
 });
 
+
+router.get("/getServicesByuserId/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const services = await Services.find({userId}).populate({
+      path: 'userId',
+      select: 'userName'
+    });
+    console.log("services", services)
+    res.json({ services });
+  } catch (error) {
+    console.log("error", error);
+    res.send(error);
+  }
+});
 router.put('/update-status/:id', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
