@@ -142,11 +142,11 @@ router.get("/getProductByuserId/:userId", async (req, res) => {
 });
 
 // Delete products by product ID
-router.delete("/deleteProducts/:productId", async (req, res) => {
-  const { productId } = req.params;
-  console.log("productId:", productId);
+router.delete("/deleteProducts/:deleteId", async (req, res) => {
+  const { deleteId } = req.params;
+  console.log("productId:", deleteId);
   try {
-    await Product.deleteOne({ _id: productId });
+    await Product.deleteOne({ _id: deleteId });
     res.sendStatus(204);
   } catch (error) {
     console.error(error);
@@ -504,6 +504,25 @@ router.put('/update-status/:id', async (req, res) => {
     res.status(200).json({ message: 'Service status updated', service });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.put('/update-product-status/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'product not found' });
+    }
+
+    product.status = status;
+    await product.save();
+
+    res.status(200).json({ message: 'product status updated', product });
+  } catch (error) {
+    res.status(500).json({ message: 'product error', error });
   }
 });
 
